@@ -3,11 +3,15 @@ import { featureImportance, positionGroups, modelComparison } from "../data/play
 import RecommendationsPanel from "../components/RecommendationsPanel"
 import Abbr from "../components/Abbr"
 
+const asPercent = (v) => `${(v * 100).toFixed(1)}%`
+const asDecimal = (v) => v.toFixed(3)
+
 const metricRows = [
-  { key: "accuracy", label: "Accuracy" },
-  { key: "recall", label: "Recall" },
-  { key: "precision", label: "Precision" },
-  { key: "auc", label: <Abbr term="AUC-ROC">AUC-ROC</Abbr> },
+  { key: "accuracy", label: "Accuracy", format: asPercent },
+  { key: "recall", label: "Recall", format: asPercent },
+  { key: "precision", label: "Precision", format: asPercent },
+  { key: "f1", label: "F1 Score", format: asPercent },
+  { key: "auc", label: <Abbr term="AUC-ROC">AUC-ROC</Abbr>, format: asDecimal },
 ]
 
 export default function SportsScienceView() {
@@ -78,7 +82,7 @@ export default function SportsScienceView() {
                 {metricRows.map((m) => (
                   <div key={m.key} className="flex items-center justify-between py-2.5">
                     <dt className="text-sm text-gray-500">{m.label}</dt>
-                    <dd className="font-mono text-sm font-semibold text-gray-900">{model[m.key].toFixed(2)}</dd>
+                    <dd className="font-mono text-sm font-semibold text-gray-900">{m.format(model[m.key])}</dd>
                   </div>
                 ))}
               </dl>
@@ -86,7 +90,7 @@ export default function SportsScienceView() {
           ))}
         </div>
         <p className="mt-4 text-xs text-gray-400">
-          <Abbr term="XGBoost">XGBoost</Abbr> selected as primary model due to highest recall — minimising missed injury predictions is prioritised over precision in a clinical context.
+          Logistic Regression selected as primary model due to highest recall (57.4%) — minimising missed injury predictions is prioritised over precision in a clinical context, despite <Abbr term="XGBoost">XGBoost</Abbr> scoring higher on raw accuracy.
         </p>
       </div>
 

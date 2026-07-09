@@ -4,7 +4,10 @@ import KpiCard from "../components/KpiCard"
 import AcwrTrendChart from "../components/AcwrTrendChart"
 import Abbr from "../components/Abbr"
 import { PlayerRoleRecommendations } from "../components/RecommendationsPanel"
-import { getPlayer, getRiskMeta, initialsOf, avatarColorFor, generateAcwrSeries, generateSessionHistory } from "../data/players"
+import {
+  getPlayer, getRiskMeta, initialsOf, avatarColorFor,
+  generateAcwrSeries, generateSessionHistory, getIdealWeightRange, getWeightStatus,
+} from "../data/players"
 
 const daysSinceRestFor = (player) => {
   if (player.id === 5) return 6
@@ -22,6 +25,8 @@ export default function PlayerProfile() {
   const meta = getRiskMeta(player.risk)
   const series = generateAcwrSeries(player)
   const sessions = generateSessionHistory(player)
+  const [minWeight, maxWeight] = getIdealWeightRange(player.position)
+  const weightStatus = getWeightStatus(player)
 
   return (
     <div className="space-y-6">
@@ -47,6 +52,27 @@ export default function PlayerProfile() {
           {meta.warn && <TriangleAlert className="h-4 w-4" />}
           <Abbr term="ACWR">ACWR</Abbr> {player.acwr.toFixed(2)} · {meta.label}
         </span>
+      </div>
+
+      <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+        <h3 className="text-sm font-semibold text-gray-900">Physical Profile</h3>
+        <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div>
+            <p className="text-xs text-gray-500">Height</p>
+            <p className="font-mono text-lg font-semibold text-gray-900">{player.heightCm} cm</p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-500">Weight</p>
+            <p className="font-mono text-lg font-semibold text-gray-900">{player.weightKg} kg</p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-500">Ideal Weight Target ({player.position})</p>
+            <p className="font-mono text-lg font-semibold text-gray-900">{minWeight}–{maxWeight} kg</p>
+            <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${weightStatus.badgeBg} ${weightStatus.badgeText}`}>
+              {weightStatus.label}
+            </span>
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">

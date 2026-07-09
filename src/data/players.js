@@ -1,17 +1,45 @@
 export const players = [
-  { id: 1, name: "James Mitchell",  position: "Prop",       acwr: 1.33, risk: "high",   available: false, sevenDayLoad: 3180, chronicLoad: 2391, injuryDays: 0, rtpReady: false },
-  { id: 2, name: "Connor O'Brien",  position: "Hooker",     acwr: 0.94, risk: "low",    available: true,  sevenDayLoad: 2250, chronicLoad: 2394, injuryDays: 0, rtpReady: true  },
-  { id: 3, name: "Marcus Williams", position: "Lock",       acwr: 1.28, risk: "medium", available: true,  sevenDayLoad: 3070, chronicLoad: 2398, injuryDays: 0, rtpReady: true  },
-  { id: 4, name: "Ryan Thompson",   position: "Flanker",    acwr: 1.05, risk: "low",    available: true,  sevenDayLoad: 2520, chronicLoad: 2400, injuryDays: 0, rtpReady: true  },
-  { id: 5, name: "Ciarán Murphy",   position: "Number 8",   acwr: 1.36, risk: "high",   available: false, sevenDayLoad: 3260, chronicLoad: 2397, injuryDays: 0, rtpReady: false },
-  { id: 6, name: "Jake Patterson",  position: "Scrum-half", acwr: 0.88, risk: "low",    available: true,  sevenDayLoad: 2110, chronicLoad: 2398, injuryDays: 0, rtpReady: true  },
-  { id: 7, name: "Seán O'Sullivan", position: "Fly-half",   acwr: 1.11, risk: "low",    available: true,  sevenDayLoad: 2660, chronicLoad: 2396, injuryDays: 0, rtpReady: true  },
-  { id: 8, name: "Ethan Roberts",   position: "Centre",     acwr: 0.97, risk: "low",    available: true,  sevenDayLoad: 2320, chronicLoad: 2392, injuryDays: 4, rtpReady: false },
-  { id: 9, name: "Padraig Kelly",   position: "Wing",       acwr: 1.19, risk: "medium", available: true,  sevenDayLoad: 2850, chronicLoad: 2395, injuryDays: 0, rtpReady: true  },
-  { id: 10, name: "Samuel Taylor",  position: "Fullback",   acwr: 1.22, risk: "medium", available: true,  sevenDayLoad: 2930, chronicLoad: 2401, injuryDays: 0, rtpReady: true  },
+  { id: 1, name: "James Mitchell",  position: "Prop",       acwr: 1.33, risk: "high",   available: false, sevenDayLoad: 3180, chronicLoad: 2391, injuryDays: 0, rtpReady: false, heightCm: 183, weightKg: 118 },
+  { id: 2, name: "Connor O'Brien",  position: "Hooker",     acwr: 0.94, risk: "low",    available: true,  sevenDayLoad: 2250, chronicLoad: 2394, injuryDays: 0, rtpReady: true,  heightCm: 180, weightKg: 108 },
+  { id: 3, name: "Marcus Williams", position: "Lock",       acwr: 1.28, risk: "medium", available: true,  sevenDayLoad: 3070, chronicLoad: 2398, injuryDays: 0, rtpReady: true,  heightCm: 201, weightKg: 128 },
+  { id: 4, name: "Ryan Thompson",   position: "Flanker",    acwr: 1.05, risk: "low",    available: true,  sevenDayLoad: 2520, chronicLoad: 2400, injuryDays: 0, rtpReady: true,  heightCm: 190, weightKg: 104 },
+  { id: 5, name: "Ciarán Murphy",   position: "Number 8",   acwr: 1.36, risk: "high",   available: false, sevenDayLoad: 3260, chronicLoad: 2397, injuryDays: 0, rtpReady: false, heightCm: 193, weightKg: 113 },
+  { id: 6, name: "Jake Patterson",  position: "Scrum-half", acwr: 0.88, risk: "low",    available: true,  sevenDayLoad: 2110, chronicLoad: 2398, injuryDays: 0, rtpReady: true,  heightCm: 173, weightKg: 75  },
+  { id: 7, name: "Seán O'Sullivan", position: "Fly-half",   acwr: 1.11, risk: "low",    available: true,  sevenDayLoad: 2660, chronicLoad: 2396, injuryDays: 0, rtpReady: true,  heightCm: 181, weightKg: 91  },
+  { id: 8, name: "Ethan Roberts",   position: "Centre",     acwr: 0.97, risk: "low",    available: true,  sevenDayLoad: 2320, chronicLoad: 2392, injuryDays: 4, rtpReady: false, heightCm: 186, weightKg: 99  },
+  { id: 9, name: "Padraig Kelly",   position: "Wing",       acwr: 1.19, risk: "medium", available: true,  sevenDayLoad: 2850, chronicLoad: 2395, injuryDays: 0, rtpReady: true,  heightCm: 187, weightKg: 93  },
+  { id: 10, name: "Samuel Taylor",  position: "Fullback",   acwr: 1.22, risk: "medium", available: true,  sevenDayLoad: 2930, chronicLoad: 2401, injuryDays: 0, rtpReady: true,  heightCm: 184, weightKg: 95  },
 ]
 
 export const getPlayer = (id) => players.find((p) => p.id === Number(id))
+
+// Typical elite senior men's rugby union target weight range by position (kg) —
+// used only as an illustrative reference band, not a clinical prescription.
+const idealWeightRangeByPosition = {
+  "Prop": [115, 125],
+  "Hooker": [105, 115],
+  "Lock": [115, 125],
+  "Flanker": [100, 110],
+  "Number 8": [108, 118],
+  "Scrum-half": [78, 88],
+  "Fly-half": [86, 95],
+  "Centre": [95, 105],
+  "Wing": [88, 98],
+  "Fullback": [90, 100],
+}
+
+export const getIdealWeightRange = (position) => idealWeightRangeByPosition[position] ?? [90, 105]
+
+export const getWeightStatus = (player) => {
+  const [min, max] = getIdealWeightRange(player.position)
+  if (player.weightKg < min) {
+    return { label: "Below target range", badgeBg: "bg-amber-100", badgeText: "text-amber-800" }
+  }
+  if (player.weightKg > max) {
+    return { label: "Above target range", badgeBg: "bg-amber-100", badgeText: "text-amber-800" }
+  }
+  return { label: "Within target range", badgeBg: "bg-green-100", badgeText: "text-green-800" }
+}
 
 // Risk styling, single source of truth so sidebar badges, KPI cards, and
 // charts can never disagree with each other.
@@ -99,9 +127,9 @@ export const positionGroups = [
 ]
 
 export const modelComparison = [
-  { model: "Logistic Regression", accuracy: 0.71, recall: 0.58, precision: 0.63, auc: 0.74, selected: false },
-  { model: "Random Forest", accuracy: 0.79, recall: 0.71, precision: 0.68, auc: 0.81, selected: false },
-  { model: "XGBoost", accuracy: 0.82, recall: 0.78, precision: 0.71, auc: 0.85, selected: true },
+  { model: "Logistic Regression", accuracy: 0.736, recall: 0.574, precision: 0.146, f1: 0.233, auc: 0.686, selected: true },
+  { model: "Random Forest", accuracy: 0.865, recall: 0.178, precision: 0.139, f1: 0.156, auc: 0.668, selected: false },
+  { model: "XGBoost", accuracy: 0.90, recall: 0.107, precision: 0.168, f1: 0.131, auc: 0.665, selected: false },
 ]
 
 // Deterministic 28-day ACWR trend ending exactly at the player's current
