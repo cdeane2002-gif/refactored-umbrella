@@ -51,6 +51,50 @@ export const riskMeta = {
 
 export const getRiskMeta = (risk) => riskMeta[risk] ?? riskMeta.low
 
+export const borderClassForRisk = (risk) =>
+  risk === "high" ? "border-l-red-600" : risk === "medium" ? "border-l-amber-600" : "border-l-green-600"
+
+export const daysSinceRestFor = (player) => {
+  if (player.id === 5) return 6
+  if (player.risk === "high") return 6
+  if (player.risk === "medium") return 3
+  return 1
+}
+
+// Plain-language welfare message for the Player View, tiered by risk level —
+// deliberately free of clinical jargon per the Player persona's design brief.
+export const getPlayerMessage = (player) => {
+  if (player.risk === "high") {
+    return "Your training load this week is higher than your body's usual baseline. Your coach and medical team have been notified. We'd suggest a lighter session on Tuesday and a full rest day on Wednesday before reassessing for Saturday's match. You're doing great work — rest is part of the plan."
+  }
+  if (player.risk === "medium") {
+    return "Your training load this week is a little higher than usual, but nothing to be concerned about. Keep an eye on how your body is recovering, get good sleep, and flag anything unusual to your medical team. You're on track for the weekend."
+  }
+  return "Your training load this week is right where it should be. Keep up your current routine, stay on top of the basics like sleep and hydration, and you're in good shape for the weekend. Well done."
+}
+
+const modifiedMatchWeekPlan = [
+  { day: "Monday", session: "Skills — moderate", note: "Standard technical session" },
+  { day: "Tuesday", session: "Reduced contact (-20%)", note: "Lighter load per current ACWR" },
+  { day: "Wednesday", session: "Rest day", note: "Full recovery, no training" },
+  { day: "Thursday", session: "Reassessment", note: "ACWR reviewed before selection" },
+  { day: "Friday", session: "Light captain's run", note: "Low-intensity, match preparation" },
+  { day: "Saturday", session: "Match day", note: "Subject to Thursday reassessment" },
+  { day: "Sunday", session: "Recovery", note: "Pool session / mobility work" },
+]
+
+const standardMatchWeekPlan = [
+  { day: "Monday", session: "Skills", note: "Standard technical session" },
+  { day: "Tuesday", session: "Full training", note: "Normal contact and conditioning" },
+  { day: "Wednesday", session: "Recovery", note: "Light mobility / pool session" },
+  { day: "Thursday", session: "Captain's run", note: "Match preparation" },
+  { day: "Friday", session: "Light session", note: "Low-intensity, match preparation" },
+  { day: "Saturday", session: "Match day", note: "Ready to go" },
+  { day: "Sunday", session: "Recovery", note: "Pool session / mobility work" },
+]
+
+export const getMatchWeekPlan = (player) => (player.risk === "high" ? modifiedMatchWeekPlan : standardMatchWeekPlan)
+
 export const initialsOf = (name) =>
   name
     .split(" ")

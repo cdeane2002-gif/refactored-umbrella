@@ -1,31 +1,36 @@
 import { useState } from "react"
-import { Link } from "react-router-dom"
+import { useParams, Link, Navigate } from "react-router-dom"
 import { MessageCircle, History, CalendarDays, Send } from "lucide-react"
 import KpiCard from "../components/KpiCard"
 import AcwrTrendChart from "../components/AcwrTrendChart"
 import Abbr from "../components/Abbr"
 import Modal from "../components/Modal"
 import { useMessages } from "../context/MessagesContext"
-import { getPlayer, generateAcwrSeries } from "../data/players"
+import {
+  getPlayer, getRiskMeta, generateAcwrSeries,
+  daysSinceRestFor, getPlayerMessage, getMatchWeekPlan, borderClassForRisk,
+} from "../data/players"
 
-const player = getPlayer(5) // Ciarán Murphy
-
-const matchWeekPlan = [
-  { day: "Monday", session: "Skills — moderate", note: "Standard technical session" },
-  { day: "Tuesday", session: "Reduced contact (-20%)", note: "Lighter load per current ACWR" },
-  { day: "Wednesday", session: "Rest day", note: "Full recovery, no training" },
-  { day: "Thursday", session: "Reassessment", note: "ACWR reviewed before selection" },
-  { day: "Friday", session: "Light captain's run", note: "Low-intensity, match preparation" },
-  { day: "Saturday", session: "Match day", note: "Subject to Thursday reassessment" },
-  { day: "Sunday", session: "Recovery", note: "Pool session / mobility work" },
-]
+const acwrSubtitleForRisk = {
+  high: "Above safe zone (0.8–1.3)",
+  medium: "Approaching upper limit (0.8–1.3)",
+  low: "Within safe zone (0.8–1.3)",
+}
 
 export default function PlayerView() {
-  const series = generateAcwrSeries(player)
+  const { id } = useParams()
+  const player = getPlayer(id)
   const { sendMessage } = useMessages()
   const [modal, setModal] = useState(null) // null | "message" | "plan"
   const [messageText, setMessageText] = useState("")
   const [sent, setSent] = useState(false)
+
+  if (!player) return <Navigate to="/player-view/5" replace />
+
+  const series = generateAcwrSeries(player)
+  const meta = getRiskMeta(player.risk)
+  const daysSinceRest = daysSinceRestFor(player)
+  const firstName = player.name.split(" ")[0]
 
   const closeModal = () => {
     setModal(null)
@@ -44,14 +49,23 @@ export default function PlayerView() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-bold text-gray-900">Your load summary, Ciarán</h1>
+        <h1 className="text-xl font-bold text-gray-900">Your load summary, {firstName}</h1>
         <p className="text-sm text-gray-500">Thursday, 12 March</p>
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <KpiCard label={<>Your <Abbr term="ACWR">ACWR</Abbr></>} value={player.acwr.toFixed(2)} valueClassName="text-red-600" subtitle="Above safe zone (0.8–1.3)" />
+        <KpiCard
+          label={<>Your <Abbr term="ACWR">ACWR</Abbr></>}
+          value={player.acwr.toFixed(2)}
+          valueClassName={meta.text}
+          subtitle={acwrSubtitleForRisk[player.risk]}
+        />
         <KpiCard label="This Week's Load" value={<>{player.sevenDayLoad.toLocaleString()} <Abbr term="AU">AU</Abbr></>} subtitle="7-day acute load" />
-        <KpiCard label="Days Since Rest" value="6" subtitle="Rest day recommended today" />
+        <KpiCard
+          label="Days Since Rest"
+          value={daysSinceRest}
+          subtitle={daysSinceRest >= 5 ? "Rest day recommended today" : "On track with recovery"}
+        />
       </div>
 
       <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
@@ -59,12 +73,8 @@ export default function PlayerView() {
         <AcwrTrendChart data={series} />
       </div>
 
-      <div className="rounded-xl border border-gray-200 border-l-4 border-l-green-600 bg-white p-5 shadow-sm">
-        <p className="text-sm leading-relaxed text-gray-700">
-          Your training load this week is higher than your body's usual baseline. Your coach and medical team have
-          been notified. We'd suggest a lighter session on Tuesday and a full rest day on Wednesday before
-          reassessing for Saturday's match. You're doing great work — rest is part of the plan.
-        </p>
+      <div className={`rounded-xl border border-gray-200 border-l-4 ${borderClassForRisk(player.risk)} bg-white p-5 shadow-sm`}>
+        <p className="text-sm leading-relaxed text-gray-700">{getPlayerMessage(player)}</p>
         <div className="mt-4 flex flex-wrap gap-2">
           <Link
             to={`/player/${player.id}`}
@@ -91,7 +101,7 @@ export default function PlayerView() {
       </div>
 
       {modal === "message" && (
-        <Modal title="Message Dr. Sinéad" onClose={closeModal}>
+        <Modal title={`Message Dr. Sinéad`} onClose={closeModal}>
           {sent ? (
             <p className="py-4 text-sm text-green-700">Message sent to Dr. Sinéad.</p>
           ) : (
@@ -119,7 +129,7 @@ export default function PlayerView() {
       {modal === "plan" && (
         <Modal title="Match-Week Plan" onClose={closeModal}>
           <ul className="divide-y divide-gray-100">
-            {matchWeekPlan.map((d) => (
+            {getMatchWeekPlan(player).map((d) => (
               <li key={d.day} className="py-2.5">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-gray-900">{d.day}</span>

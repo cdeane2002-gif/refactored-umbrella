@@ -6,15 +6,8 @@ import Abbr from "../components/Abbr"
 import { PlayerRoleRecommendations } from "../components/RecommendationsPanel"
 import {
   getPlayer, getRiskMeta, initialsOf, avatarColorFor,
-  generateAcwrSeries, generateSessionHistory, getIdealWeightRange, getWeightStatus,
+  generateAcwrSeries, generateSessionHistory, getIdealWeightRange, getWeightStatus, daysSinceRestFor,
 } from "../data/players"
-
-const daysSinceRestFor = (player) => {
-  if (player.id === 5) return 6
-  if (player.risk === "high") return 6
-  if (player.risk === "medium") return 3
-  return 1
-}
 
 export default function PlayerProfile() {
   const { id } = useParams()

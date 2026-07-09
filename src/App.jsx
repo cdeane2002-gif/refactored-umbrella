@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom"
+import { Routes, Route, Navigate } from "react-router-dom"
 import Sidebar from "./components/Sidebar"
 import Header from "./components/Header"
 import CoachView from "./pages/CoachView"
@@ -23,7 +23,8 @@ export default function App() {
                 <Route path="/" element={<CoachView />} />
                 <Route path="/medical" element={<MedicalView />} />
                 <Route path="/sports-science" element={<SportsScienceView />} />
-                <Route path="/player-view" element={<PlayerView />} />
+                <Route path="/player-view" element={<Navigate to="/player-view/5" replace />} />
+                <Route path="/player-view/:id" element={<PlayerView />} />
                 <Route path="/player/:id" element={<PlayerProfile />} />
                 <Route path="/governance" element={<DataGovernance />} />
               </Routes>

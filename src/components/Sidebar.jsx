@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom"
+import { Link, useLocation, useNavigate, matchPath } from "react-router-dom"
 import { Activity, Shield, TriangleAlert } from "lucide-react"
 import { players, getRiskMeta, initialsOf, avatarColorFor } from "../data/players"
 
@@ -6,12 +6,13 @@ const personaByPath = {
   "/": "Coach Dashboard · Tomás",
   "/medical": "Medical Dashboard · Dr. Sinéad",
   "/sports-science": "Sports Science Dashboard · Aoife",
-  "/player-view": "Player Dashboard · Ciarán",
 }
 
 export default function Sidebar() {
   const location = useLocation()
-  const persona = personaByPath[location.pathname] ?? "Coach Dashboard · Tomás"
+  const navigate = useNavigate()
+  const playerViewMatch = matchPath("/player-view/:id", location.pathname)
+  const persona = personaByPath[location.pathname] ?? "Player Dashboard"
 
   return (
     <aside className="fixed left-0 top-0 h-screen w-[220px] shrink-0 border-r border-gray-200 bg-white flex flex-col">
@@ -20,7 +21,24 @@ export default function Sidebar() {
           <Activity className="h-6 w-6 text-green-600" strokeWidth={2.5} />
           <span className="font-bold text-gray-900 leading-tight">PlaySafe Analytics</span>
         </Link>
-        <p className="mt-2 text-xs text-gray-500 leading-snug">{persona}</p>
+        {playerViewMatch ? (
+          <div className="mt-2 flex flex-wrap items-center gap-1 text-xs text-gray-500 leading-snug">
+            <span>Player Dashboard ·</span>
+            <select
+              value={playerViewMatch.params.id}
+              onChange={(e) => navigate(`/player-view/${e.target.value}`)}
+              className="cursor-pointer rounded border-none bg-transparent p-0 text-xs font-medium text-gray-700 focus:outline-none focus:ring-1 focus:ring-green-600"
+            >
+              {players.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : (
+          <p className="mt-2 text-xs text-gray-500 leading-snug">{persona}</p>
+        )}
       </div>
 
       <div className="px-4 pt-4 pb-2">
