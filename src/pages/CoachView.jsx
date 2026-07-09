@@ -5,7 +5,28 @@ import {
 import KpiCard from "../components/KpiCard"
 import RecommendationsPanel from "../components/RecommendationsPanel"
 import Abbr from "../components/Abbr"
-import { squadSummary, riskDistribution, workloadTrend } from "../data/players"
+import { players, squadSummary, riskDistribution, workloadTrend } from "../data/players"
+
+function RiskDistributionTooltip({ active, payload }) {
+  if (!active || !payload?.length) return null
+  const { key, name, color } = payload[0].payload
+  const matchingPlayers = players.filter((p) => p.risk === key)
+
+  return (
+    <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-md">
+      <p className="text-xs font-semibold" style={{ color }}>
+        {name} ({matchingPlayers.length})
+      </p>
+      <ul className="mt-1.5 space-y-0.5">
+        {matchingPlayers.map((p) => (
+          <li key={p.id} className="text-xs text-gray-600">
+            {p.name} <span className="text-gray-400">({p.position})</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
 
 export default function CoachView() {
   return (
@@ -33,7 +54,7 @@ export default function CoachView() {
               <CartesianGrid strokeDasharray="3 3" horizontal={false} />
               <XAxis type="number" domain={[0, 6]} ticks={[0, 2, 4, 6]} tick={{ fontSize: 12 }} />
               <YAxis type="category" dataKey="name" width={90} tick={{ fontSize: 12 }} />
-              <Tooltip formatter={(value) => [`${value} players`, "Count"]} />
+              <Tooltip content={<RiskDistributionTooltip />} />
               <Bar dataKey="count" radius={[0, 4, 4, 0]} barSize={28}>
                 {riskDistribution.map((entry) => (
                   <Cell key={entry.key} fill={entry.color} />
