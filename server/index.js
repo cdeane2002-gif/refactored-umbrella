@@ -13,6 +13,8 @@ const defaultData = {
     { id: "seed-2", playerId: 5, role: "coach", text: "Reduce Tuesday session by 20%. Reassess Thursday before confirming match selection." },
   ],
   messages: [],
+  // Data-storage consent per player. Missing entry defaults to opted-in (true).
+  consent: {},
 }
 
 function readData() {
@@ -83,6 +85,22 @@ app.post("/api/messages", (req, res) => {
   data.messages.push(entry)
   writeData(data)
   res.status(201).json(entry)
+})
+
+app.get("/api/consent", (req, res) => {
+  res.json(readData().consent ?? {})
+})
+
+app.put("/api/consent/:playerId", (req, res) => {
+  const { consent } = req.body
+  if (typeof consent !== "boolean") {
+    return res.status(400).json({ error: "consent must be a boolean" })
+  }
+  const data = readData()
+  if (!data.consent) data.consent = {}
+  data.consent[req.params.playerId] = consent
+  writeData(data)
+  res.json({ playerId: Number(req.params.playerId), consent })
 })
 
 const PORT = process.env.PORT || 4000

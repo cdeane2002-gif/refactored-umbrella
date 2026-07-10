@@ -1,9 +1,11 @@
 import { useParams, Link, Navigate } from "react-router-dom"
-import { ArrowLeft, TriangleAlert, Users, Stethoscope, FlaskConical } from "lucide-react"
+import { ArrowLeft, TriangleAlert, Users, Stethoscope, FlaskConical, ShieldCheck } from "lucide-react"
 import KpiCard from "../components/KpiCard"
 import AcwrTrendChart from "../components/AcwrTrendChart"
 import Abbr from "../components/Abbr"
+import Toggle from "../components/Toggle"
 import { PlayerRoleRecommendations } from "../components/RecommendationsPanel"
+import { useConsent } from "../context/ConsentContext"
 import {
   getPlayer, getRiskMeta, initialsOf, avatarColorFor,
   generateAcwrSeries, generateSessionHistory, getIdealWeightRange, getWeightStatus, daysSinceRestFor,
@@ -12,6 +14,7 @@ import {
 export default function PlayerProfile() {
   const { id } = useParams()
   const player = getPlayer(id)
+  const { isConsented, setConsent } = useConsent()
 
   if (!player) return <Navigate to="/" replace />
 
@@ -20,6 +23,7 @@ export default function PlayerProfile() {
   const sessions = generateSessionHistory(player)
   const [minWeight, maxWeight] = getIdealWeightRange(player.position)
   const weightStatus = getWeightStatus(player)
+  const consented = isConsented(player.id)
 
   return (
     <div className="space-y-6">
@@ -47,37 +51,66 @@ export default function PlayerProfile() {
         </span>
       </div>
 
-      <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-        <h3 className="text-sm font-semibold text-gray-900">Physical Profile</h3>
-        <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="flex items-center justify-between rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+        <div className="flex items-center gap-2">
+          <ShieldCheck className="h-4 w-4 text-gray-500" />
           <div>
-            <p className="text-xs text-gray-500">Height</p>
-            <p className="font-mono text-lg font-semibold text-gray-900">{player.heightCm} cm</p>
+            <p className="text-sm font-medium text-gray-900">Data Storage Consent</p>
+            <p className="text-xs text-gray-500">
+              {consented
+                ? "This player has opted in to training data storage."
+                : "Opted out — detailed training data is hidden below."}
+            </p>
           </div>
-          <div>
-            <p className="text-xs text-gray-500">Weight</p>
-            <p className="font-mono text-lg font-semibold text-gray-900">{player.weightKg} kg</p>
-          </div>
-          <div>
-            <p className="text-xs text-gray-500">Ideal Weight Target ({player.position})</p>
-            <p className="font-mono text-lg font-semibold text-gray-900">{minWeight}–{maxWeight} kg</p>
-            <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${weightStatus.badgeBg} ${weightStatus.badgeText}`}>
-              {weightStatus.label}
-            </span>
-          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className={`text-xs font-semibold ${consented ? "text-green-700" : "text-gray-500"}`}>
+            {consented ? "Opted in" : "Opted out"}
+          </span>
+          <Toggle checked={consented} onChange={(value) => setConsent(player.id, value)} label="Data storage consent" />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <KpiCard label={<>Current <Abbr term="ACWR">ACWR</Abbr></>} value={player.acwr.toFixed(2)} valueClassName={meta.text} />
-        <KpiCard label="7-Day Acute Load" value={<>{player.sevenDayLoad.toLocaleString()} <Abbr term="AU">AU</Abbr></>} />
-        <KpiCard label="Days Since Last Rest" value={daysSinceRestFor(player)} />
-      </div>
+      {!consented ? (
+        <div className="rounded-xl border border-gray-200 bg-white p-5 text-sm italic text-gray-500 shadow-sm">
+          This player has opted out of data storage. Physical profile, workload KPIs, ACWR trend, and session history
+          are not being retained or displayed, per GDPR-compliant data handling.
+        </div>
+      ) : (
+        <>
+          <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+            <h3 className="text-sm font-semibold text-gray-900">Physical Profile</h3>
+            <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <div>
+                <p className="text-xs text-gray-500">Height</p>
+                <p className="font-mono text-lg font-semibold text-gray-900">{player.heightCm} cm</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500">Weight</p>
+                <p className="font-mono text-lg font-semibold text-gray-900">{player.weightKg} kg</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500">Ideal Weight Target ({player.position})</p>
+                <p className="font-mono text-lg font-semibold text-gray-900">{minWeight}–{maxWeight} kg</p>
+                <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${weightStatus.badgeBg} ${weightStatus.badgeText}`}>
+                  {weightStatus.label}
+                </span>
+              </div>
+            </div>
+          </div>
 
-      <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-        <h3 className="text-sm font-semibold text-gray-900">28-Day <Abbr term="ACWR">ACWR</Abbr> Trend</h3>
-        <AcwrTrendChart data={series} />
-      </div>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <KpiCard label={<>Current <Abbr term="ACWR">ACWR</Abbr></>} value={player.acwr.toFixed(2)} valueClassName={meta.text} />
+            <KpiCard label="7-Day Acute Load" value={<>{player.sevenDayLoad.toLocaleString()} <Abbr term="AU">AU</Abbr></>} />
+            <KpiCard label="Days Since Last Rest" value={daysSinceRestFor(player)} />
+          </div>
+
+          <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+            <h3 className="text-sm font-semibold text-gray-900">28-Day <Abbr term="ACWR">ACWR</Abbr> Trend</h3>
+            <AcwrTrendChart data={series} />
+          </div>
+        </>
+      )}
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <PlayerRoleRecommendations
@@ -109,33 +142,35 @@ export default function PlayerProfile() {
         />
       </div>
 
-      <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-        <h3 className="text-sm font-semibold text-gray-900">Session History — Last 7 Days</h3>
-        <div className="mt-3 overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead>
-              <tr className="border-b border-gray-200 text-xs uppercase tracking-wide text-gray-400">
-                <th className="py-2 pr-4 font-medium">Date</th>
-                <th className="py-2 pr-4 font-medium">Session Type</th>
-                <th className="py-2 pr-4 font-medium">Load (<Abbr term="AU">AU</Abbr>)</th>
-                <th className="py-2 pr-4 font-medium">Duration</th>
-                <th className="py-2 pr-4 font-medium"><Abbr term="RPE">RPE</Abbr></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {sessions.map((s) => (
-                <tr key={s.date}>
-                  <td className="py-3 pr-4 text-gray-600">{s.date}</td>
-                  <td className="py-3 pr-4 font-medium text-gray-900">{s.type}</td>
-                  <td className="py-3 pr-4 font-mono text-gray-600">{s.type === "Rest" ? "—" : s.load}</td>
-                  <td className="py-3 pr-4 font-mono text-gray-600">{s.type === "Rest" ? "—" : `${s.duration} min`}</td>
-                  <td className="py-3 pr-4 font-mono text-gray-600">{s.type === "Rest" ? "—" : `${s.rpe}/10`}</td>
+      {consented && (
+        <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+          <h3 className="text-sm font-semibold text-gray-900">Session History — Last 7 Days</h3>
+          <div className="mt-3 overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="border-b border-gray-200 text-xs uppercase tracking-wide text-gray-400">
+                  <th className="py-2 pr-4 font-medium">Date</th>
+                  <th className="py-2 pr-4 font-medium">Session Type</th>
+                  <th className="py-2 pr-4 font-medium">Load (<Abbr term="AU">AU</Abbr>)</th>
+                  <th className="py-2 pr-4 font-medium">Duration</th>
+                  <th className="py-2 pr-4 font-medium"><Abbr term="RPE">RPE</Abbr></th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {sessions.map((s) => (
+                  <tr key={s.date}>
+                    <td className="py-3 pr-4 text-gray-600">{s.date}</td>
+                    <td className="py-3 pr-4 font-medium text-gray-900">{s.type}</td>
+                    <td className="py-3 pr-4 font-mono text-gray-600">{s.type === "Rest" ? "—" : s.load}</td>
+                    <td className="py-3 pr-4 font-mono text-gray-600">{s.type === "Rest" ? "—" : `${s.duration} min`}</td>
+                    <td className="py-3 pr-4 font-mono text-gray-600">{s.type === "Rest" ? "—" : `${s.rpe}/10`}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }
